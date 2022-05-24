@@ -11,10 +11,19 @@ export default function App() {
   // if(!user) {
   //   return  <Login changeStatus={(user) => setUser(user)}/>
   // }
+
   let tasks =[
     { key: '1', name: 'Leg Day dos crias' },
     { key: '2', name: 'Naruto' },
   ]
+
+  function handleDelete(key) {
+    console.log(key);
+  }
+
+  function handleEdit(task) {
+    console.log(task);
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -30,7 +39,7 @@ export default function App() {
       <FlatList
         data={tasks}
         keyExtractor={(item) => item.id}
-        renderItem={({item}) => <TaskList task={item} />}
+        renderItem={({item}) => <TaskList task={item} deleteItem={handleDelete} editItem={handleEdit} />}
       />
 
     </SafeAreaView>
