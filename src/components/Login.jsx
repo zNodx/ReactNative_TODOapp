@@ -1,7 +1,8 @@
 import { StyleSheet, Text, View,SafeAreaView, TextInput, TouchableOpacity} from 'react-native'
 import React from 'react'
+import firebase from '../config/firebase'
 
-const Login = () => {
+const Login = ({changeStatus}) => {
 
   const [type, setType] = React.useState('login')
 
@@ -9,8 +10,16 @@ const Login = () => {
   const [password, setPassword] = React.useState('')
 
   const handleSubmit = () => {
-    console.log('email: ', email)
-    console.log('password: ', password)
+ 
+    if(type === 'login' ){
+      const user = firebase.auth().signInWithEmailAndPassword(email, password)
+        .then((user) => [alert('Logged in with ' + user.user.email),changeStatus(user.user.uid)])
+        .catch(() => alert('Error logging in'))
+      }else{
+      const user = firebase.auth().createUserWithEmailAndPassword(email, password)
+        .then((user) => alert('User created' + user.user.email))
+        .catch(() => alert('Error creating user'))
+      }
   }
 
   return (
