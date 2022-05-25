@@ -1,21 +1,45 @@
-import { useState } from 'react';
-import { StyleSheet, Text, View, SafeAreaView, TextInput, TouchableOpacity, FlatList} from 'react-native';
+import { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, SafeAreaView, TextInput, TouchableOpacity, FlatList, Keyboard} from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 import TaskList from './src/components/TaskList';
 import Login from './src/components/Login';
+import firebase from './src/config/firebase';
 
 export default function App() {
 
   const [user, setUser] = useState(null);
+  const [tasks, setTasks] = useState([]);
+  const [newTask, setNewTask] = useState('');
 
-  // if(!user) {
-  //   return  <Login changeStatus={(user) => setUser(user)}/>
-  // }
+  useEffect(() => {
+    function getUser(){
 
-  let tasks =[
-    { key: '1', name: 'Leg Day dos crias' },
-    { key: '2', name: 'Naruto' },
-  ]
+      if(!user) {
+        return;
+      }
+  
+      firebase.database().ref('tasks').child(user).once('value', (snapshot) => {
+        setTasks([])
+        snapshot?.forEach((child) => {
+          const data = {
+            key: child.key,
+            name: child.val().name,
+          }
+          setTasks(oldTasks => [...oldTasks, data]);
+        });
+      });
+
+    }
+
+    getUser();
+
+  }, [user]); 
+
+
+  if(!user) {
+    return  <Login changeStatus={(user) => setUser(user)}/>
+  }
+
 
   function handleDelete(key) {
     console.log(key);
@@ -25,14 +49,43 @@ export default function App() {
     console.log(task);
   }
 
+  function handleAdd() {
+    if(newTask === '') {
+      return;
+    }
+    let task = firebase.database().ref('tasks').child(user)
+    let key = task.push().key;
+    task.child(key).set({
+      name: newTask,
+      status: false
+    })
+    .then (() => {
+      alert('Task added');
+      const data ={
+        key: key,
+        name: newTask,
+        status: false
+      }
+      setTasks(oldTasks => [...oldTasks, data]);
+      setNewTask('');
+      Keyboard.dismiss();
+    })
+    .catch((error) => {
+      alert(error);
+    })
+
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.containerTask}>
         <TextInput 
           style={styles.input}
           placeholder="To be done today"
+          onChangeText={(text) => setNewTask(text)}
+          value={newTask}
         />  
-        <TouchableOpacity style={styles.buttonAdd}>
+        <TouchableOpacity style={styles.buttonAdd} onPress={handleAdd}>
           <AntDesign name="plus" size={15} color="black" />
         </TouchableOpacity>
       </View>
